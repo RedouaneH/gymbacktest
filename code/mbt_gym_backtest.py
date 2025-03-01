@@ -5,7 +5,7 @@ import numpy as np
 from typing import Optional
 from collections import OrderedDict
 from typing import Union, Tuple, Callable
-sys.path.append("../mbt_gym/")
+sys.path.append("../")
 from mbt_gym.stochastic_processes.StochasticProcessModel import StochasticProcessModel
 from mbt_gym.gym.index_names import CASH_INDEX, INVENTORY_INDEX
 from mbt_gym.stochastic_processes.arrival_models import ArrivalModel
@@ -256,4 +256,3 @@ class BackTestingTradingEnvironment(TradingEnvironment):
             process_indices[process_name] = (count, count + dimension)
             count += dimension
         return OrderedDict(process_indices)
-
