@@ -67,11 +67,11 @@ class HistoricalMidpriceModel(StochasticProcessModel):
 
 
 class BackTestingLimitOrderModelDynamics(ModelDynamics):
-    """ModelDynamics for limit orders using direct order execution.
-
-    In this model, instead of using 'arrival_model' and 'fill_probability_model'
-    to determine order fills, we directly provide an 'executed' array
-    (same size as the action) containing 1 if the order was executed, 0 otherwise.
+    """
+    Instead of relying on an 'arrival_model' and a 'fill_probability_model' to determine 
+    whether an order is executed, this model directly takes an 'executed' array. 
+    The 'executed' array has the same shape as the action array and contains 1 if the order 
+    was executed and 0 otherwise.
     """
 
     def __init__(
@@ -168,7 +168,7 @@ class BackTestingTradingEnvironment(TradingEnvironment):
 
     def reset(self):
         """
-        This reset function also return the non normalised model_dynamics state, necessary to plot the real values
+        This reset function also returns the non-normalized model_dynamics state, which is necessary for plotting the real values.
         """
         for process in self.stochastic_processes.values():
             process.reset()
@@ -185,7 +185,8 @@ class BackTestingTradingEnvironment(TradingEnvironment):
             executed (np.ndarray): An array of the same shape as action indicating order execution (1 if executed, 0 otherwise).
 
         Returns:
-            observation (np.ndarray): The new (normalized) observation.
+            normalized_observation (np.ndarray): The new normalized observation.
+            observation (np.ndarray): The new observation.
             reward (np.ndarray): The (normalized) reward.
             done (np.ndarray): The done flag.
             info (dict): Additional info.
