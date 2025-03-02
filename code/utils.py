@@ -26,17 +26,6 @@ def get_midprices(hbt, dt, size=None):
 
     return mid_prices
 
-def is_order_executed(hbt, target_order_id, asset_no=0):
-
-    orders = hbt.orders(asset_no)
-    order_iterator = orders.values()
-    while order_iterator.has_next():
-        order = order_iterator.get()
-        if order.order_id == target_order_id:
-            # Order is still active.
-            return False
-    # Order not found among active orders.
-    return True
 
 def place_orders(hbt, action, asset_no, lot_size, tick_size, order_qty):
 
@@ -48,31 +37,40 @@ def place_orders(hbt, action, asset_no, lot_size, tick_size, order_qty):
     bid_spread = action[:, 0][0]
     ask_spread = action[:, 1][0]
 
-    bid_price = mid_price-bid_spread
-    ask_price = mid_price-ask_spread
+    bid_price = mid_price - bid_spread
+    ask_price = mid_price + ask_spread
     bid_order_id = int(bid_price / tick_size)
     ask_order_id = int(ask_price / tick_size)
 
     hbt.submit_buy_order(asset_no, bid_order_id, bid_price, lot_order_qty, GTX, LIMIT, False)
-    hbt.submit_buy_order(asset_no, ask_order_id, ask_price, lot_order_qty, GTX, LIMIT, False)
+    hbt.submit_sell_order(asset_no, ask_order_id, ask_price, lot_order_qty, GTX, LIMIT, False)
 
     return bid_order_id, ask_order_id
 
-def get_executed_status(hbt, bid_order_id, ask_order_id, asset_no):
-    if is_order_executed(hbt, bid_order_id, asset_no=0):
-        bid_executed = 1
-    else:
-        bid_executed = 0
+
+import math
+
+def get_executed_status(hbt, bid_order_id, ask_order_id, asset_no, trading_balance, num_trades):
+
+    num_trades = hbt.state_values(asset_no).num_trades-num_trades
+    trading_balance = hbt.state_values(asset_no).balance-trading_balance
+
+    if num_trades == 2:
+        return [1, 1]
+    if num_trades == 0:
         hbt.cancel(asset_no, bid_order_id, False)
-
-    if is_order_executed(hbt, ask_order_id, asset_no=0):
-        ask_executed = 1
-    else:
-        ask_executed = 0
         hbt.cancel(asset_no, ask_order_id, False)
-
-    return bid_executed, ask_executed
-
+        return [0, 0]
+    if num_trades == 1 and trading_balance < 4000:
+        hbt.cancel(asset_no, ask_order_id, False)
+        return [1, 0]
+    if num_trades == 1 and trading_balance > 4000:
+        hbt.cancel(asset_no, bid_order_id, False)
+        return [0, 1]
+    
+    "Sometimes num_trades is not in [0, 1, 2] need to fix this"
+    return [0, 0]
+    
 
 import matplotlib.pyplot as plt
 from mbt_gym.gym.index_names import CASH_INDEX, INVENTORY_INDEX, TIME_INDEX, ASSET_PRICE_INDEX
